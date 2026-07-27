@@ -2,16 +2,17 @@
 layout: about
 title: about
 permalink: /
-subtitle: Assistant Professor, Department of Civil Engineering, Middle East Technical University (METU)
+subtitle: Osman Gültekin, Assistant Professor, Department of Civil Engineering, Middle East Technical University (METU)
 
 profile:
   align: right
   image: prof_pic.jpg
   image_circular: false # crops the image to make it circular
   more_info: >
-    <p>555 your office number</p>
-    <p>123 your address street</p>
-    <p>Your City, State 12345</p>
+    <p>Department of Civil Engineering</p>
+    <p>Middle East Technical University</p>
+    <p>Üniversiteler Mah., 06800 Çankaya, Ankara</p>
+    <p>osmang[at]metu.edu.tr</p>
 
 selected_papers: true # includes a list of papers marked as "selected={true}"
 social: true # includes social icons at the bottom of the page

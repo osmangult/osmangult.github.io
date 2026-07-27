@@ -2,7 +2,7 @@
 layout: about
 title: about
 permalink: /
-subtitle: <a href='#'>Affiliations</a>. Address. Contacts. Motto. Etc.
+subtitle: Assistant Professor, Department of Civil Engineering, Middle East Technical University (METU)
 
 profile:
   align: right

@@ -11,7 +11,8 @@ profile:
   more_info: >
     <p>Department of Civil Engineering</p>
     <p>Middle East Technical University</p>
-    <p>Üniversiteler Mah., 06800 Çankaya, Ankara</p>
+    <p>Üniversiteler Mah., Dumlupınar Blv., No. 1</p>
+    <p>06800 Çankaya, Ankara</p>
     <p>osmang[at]metu.edu.tr</p>
 
 selected_papers: true # includes a list of papers marked as "selected={true}"

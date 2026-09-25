@@ -6,6 +6,7 @@
   Removed:  preview images/GIFs/videos, Abs/Bib/PDF buttons, citation badges.
   Link:     entry.url, falling back to https://doi.org/<entry.doi>.
   In press: entries with  status = {inpress}  print "[in press]" instead of the year.
+  Names:    von-parts (e.g. "de Souza Neto") are kept; "pp." is added only to page ranges.
 {%- endcomment -%}
 
 {%- assign entry_link = nil -%}
@@ -34,10 +35,11 @@
     {%- if site.scholar.last_name contains author_last_name and site.scholar.first_name contains author.first -%}
       {%- assign author_is_self = true -%}
     {%- endif -%}
+    {%- capture author_name -%}{{ author.first }} {% if author.prefix and author.prefix != '' %}{{ author.prefix }} {% endif %}{{ author.last }}{%- endcapture -%}
     {%- if author_is_self -%}
-      <strong>{{ author.first }} {{ author.last }}</strong>
+      <strong>{{ author_name }}</strong>
     {%- else -%}
-      {{ author.first }} {{ author.last }}
+      {{ author_name }}
     {%- endif -%}
     {%- unless forloop.last -%}, {% endunless -%}
   {%- endfor -%}
@@ -45,9 +47,18 @@
 
 {%- capture editors_html -%}
   {%- for editor in entry.editor_array -%}
-    {{ editor.first }} {{ editor.last }}{% unless forloop.last %}, {% endunless %}
+    {{ editor.first }} {% if editor.prefix and editor.prefix != '' %}{{ editor.prefix }} {% endif %}{{ editor.last }}{% unless forloop.last %}, {% endunless %}
   {%- endfor -%}
 {%- endcapture -%}
+
+{%- assign pages_label = '' -%}
+{%- if entry.pages -%}
+  {%- if entry.pages contains '–' or entry.pages contains '-' -%}
+    {%- assign pages_label = entry.pages | prepend: 'pp. ' -%}
+  {%- else -%}
+    {%- assign pages_label = entry.pages -%}
+  {%- endif -%}
+{%- endif -%}
 
 {%- assign title_text = entry.title | strip -%}
 {%- assign title_end = title_text | slice: -1 -%}
@@ -62,9 +73,9 @@
     {%- when 'article' -%}
       {{ entry.journal }}{% if entry.volume %} {{ entry.volume }}{% endif %}{% if entry.number %}, {{ entry.number }}{% endif %}{% if entry.pages %}, {{ entry.pages }}{% endif %}.
     {%- when 'incollection', 'inbook' -%}
-      In: {% if editors_html != '' %}{{ editors_html }} (eds) {% endif %}{{ entry.booktitle }}{% if entry.series %}. {{ entry.series }}{% endif %}{% if entry.volume %}, vol. {{ entry.volume }}{% endif %}{% if entry.pages %}, pp. {{ entry.pages }}{% endif %}{% if entry.publisher %}. {{ entry.publisher }}{% endif %}{% if entry.address %}, {{ entry.address }}{% endif %}.
+      In: {% if editors_html != '' %}{{ editors_html }} (eds) {% endif %}{{ entry.booktitle }}{% if entry.series %}. {{ entry.series }}{% endif %}{% if entry.volume %}, vol. {{ entry.volume }}{% endif %}{% if pages_label != '' %}, {{ pages_label }}{% endif %}{% if entry.publisher %}. {{ entry.publisher }}{% endif %}{% if entry.address %}, {{ entry.address }}{% endif %}.
     {%- when 'inproceedings' -%}
-      {% if editors_html != '' %}In: {{ editors_html }} (eds) {% endif %}{{ entry.booktitle }}{% if entry.volume %} {{ entry.volume }}{% endif %}{% if entry.number %}:{{ entry.number }}{% endif %}{% if entry.pages %}, pp. {{ entry.pages }}{% endif %}.
+      {% if editors_html != '' %}In: {{ editors_html }} (eds) {% endif %}{{ entry.booktitle }}{% if entry.volume %} {{ entry.volume }}{% endif %}{% if entry.number %}:{{ entry.number }}{% endif %}{% if pages_label != '' %}, {{ pages_label }}{% endif %}.
     {%- when 'phdthesis' -%}
       Ph.D. Thesis, {{ entry.school }}{% if entry.pagetotal %}, {{ entry.pagetotal }} pages{% endif %}.
     {%- when 'mastersthesis' -%}

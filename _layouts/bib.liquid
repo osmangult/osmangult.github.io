@@ -1,1 +1,90 @@
+---
+---
+{%- comment -%}
+  Local override of al_folio_core/_layouts/bib.liquid (CV-style entries).
+  Renders:  [BADGE→url]  Authors [year]: Title. Venue.
+  Removed:  preview images/GIFs/videos, Abs/Bib/PDF buttons, citation badges.
+  Link:     entry.url, falling back to https://doi.org/<entry.doi>.
+  In press: entries with  status = {inpress}  print "[in press]" instead of the year.
+{%- endcomment -%}
 
+{%- assign entry_link = nil -%}
+{%- if entry.url and entry.url != '' -%}
+  {%- assign entry_link = entry.url -%}
+{%- elsif entry.doi and entry.doi != '' -%}
+  {%- assign entry_link = entry.doi | prepend: 'https://doi.org/' -%}
+{%- endif -%}
+
+{%- assign badge_label = entry.abbr | default: 'url' -%}
+{%- assign badge_style = '' -%}
+{%- if entry.abbr and site.data.venues[entry.abbr].color -%}
+  {%- assign badge_style = site.data.venues[entry.abbr].color | prepend: 'background-color:' -%}
+{%- endif -%}
+
+{%- if entry.status == 'inpress' -%}
+  {%- assign year_label = 'in press' -%}
+{%- else -%}
+  {%- assign year_label = entry.year -%}
+{%- endif -%}
+
+{%- capture authors_html -%}
+  {%- for author in entry.author_array -%}
+    {%- assign author_last_name = author.last | regex_replace: '[*∗†‡§¶‖&^]', '' -%}
+    {%- assign author_is_self = false -%}
+    {%- if site.scholar.last_name contains author_last_name and site.scholar.first_name contains author.first -%}
+      {%- assign author_is_self = true -%}
+    {%- endif -%}
+    {%- if author_is_self -%}
+      <strong>{{ author.first }} {{ author.last }}</strong>
+    {%- else -%}
+      {{ author.first }} {{ author.last }}
+    {%- endif -%}
+    {%- unless forloop.last -%}, {% endunless -%}
+  {%- endfor -%}
+{%- endcapture -%}
+
+{%- capture editors_html -%}
+  {%- for editor in entry.editor_array -%}
+    {{ editor.first }} {{ editor.last }}{% unless forloop.last %}, {% endunless %}
+  {%- endfor -%}
+{%- endcapture -%}
+
+{%- assign title_text = entry.title | strip -%}
+{%- assign title_end = title_text | slice: -1 -%}
+{%- if title_end == '.' or title_end == '?' or title_end == '!' -%}
+  {%- assign title_sep = ' ' -%}
+{%- else -%}
+  {%- assign title_sep = '. ' -%}
+{%- endif -%}
+
+{%- capture venue_html -%}
+  {%- case entry.type -%}
+    {%- when 'article' -%}
+      {{ entry.journal }}{% if entry.volume %} {{ entry.volume }}{% endif %}{% if entry.number %}, {{ entry.number }}{% endif %}{% if entry.pages %}, {{ entry.pages }}{% endif %}.
+    {%- when 'incollection', 'inbook' -%}
+      In: {% if editors_html != '' %}{{ editors_html }} (eds) {% endif %}{{ entry.booktitle }}{% if entry.series %}. {{ entry.series }}{% endif %}{% if entry.volume %}, vol. {{ entry.volume }}{% endif %}{% if entry.pages %}, pp. {{ entry.pages }}{% endif %}{% if entry.publisher %}. {{ entry.publisher }}{% endif %}{% if entry.address %}, {{ entry.address }}{% endif %}.
+    {%- when 'inproceedings' -%}
+      {% if editors_html != '' %}In: {{ editors_html }} (eds) {% endif %}{{ entry.booktitle }}{% if entry.volume %} {{ entry.volume }}{% endif %}{% if entry.number %}:{{ entry.number }}{% endif %}{% if entry.pages %}, pp. {{ entry.pages }}{% endif %}.
+    {%- when 'phdthesis' -%}
+      Ph.D. Thesis, {{ entry.school }}{% if entry.pagetotal %}, {{ entry.pagetotal }} pages{% endif %}.
+    {%- when 'mastersthesis' -%}
+      M.Sc. Thesis, {{ entry.school }}{% if entry.pagetotal %}, {{ entry.pagetotal }} pages{% endif %}.
+    {%- else -%}
+      {{ entry.journal | default: entry.booktitle | default: entry.publisher }}{% if entry.pages %}, {{ entry.pages }}{% endif %}.
+  {%- endcase -%}
+{%- endcapture -%}
+
+<div class="row">
+  <div class="col col-sm-2 abbr">
+    <abbr class="badge rounded w-100"{% if badge_style != '' %} style="{{ badge_style }}"{% endif %}>
+      {%- if entry_link -%}
+        <a href="{{ entry_link }}" title="Open article" target="_blank" rel="noopener">{{ badge_label }}</a>
+      {%- else -%}
+        <div>{{ badge_label }}</div>
+      {%- endif -%}
+    </abbr>
+  </div>
+  <div id="{{ entry.key }}" class="col-sm-10 cv-citation">
+    {{ authors_html }} [{{ year_label }}]: <em>{{ title_text }}</em>{{ title_sep }}{{ venue_html | strip }}
+  </div>
+</div>

@@ -1,10 +1,10 @@
 ---
 layout: page
 title: "Tecplot User Day: Postprocessing of Simulation Data"
-date: 2025-08-25
+date: 2019-05-27
 location: METU, Ankara, Türkiye
 tags: events
-description: "Crack phase-field modeling to predict the progression of aortic dissection (G. A. Holzapfel, M. Rolf, O. Gültekin)"
+description: Symposium organized at the Department of Mechanical Engineering, METU
 ---
 
 <div class="row mt-3">

@@ -4,3 +4,33 @@ title: events
 permalink: /blog/events/
 description: Events organized or hosted by CSML.
 ---
+
+<p><a href="{{ '/blog/' | relative_url }}">&larr; blog</a></p>
+
+<div class="table-responsive">
+<table class="table table-sm table-borderless">
+{% assign n = 0 %}
+{% for post in site.posts %}
+{% if post.tags contains page.title %}
+{% assign n = n | plus: 1 %}
+{% assign y1 = post.date | date: '%Y' %}
+{% assign m1 = post.date | date: '%b %Y' %}
+<tr>
+<td style="width: 32%; vertical-align: top; padding-top: 0.6rem; padding-bottom: 0.6rem;">
+<span style="white-space: nowrap;">{% if post.end_date %}
+{% assign y2 = post.end_date | date: '%Y' %}
+{% assign m2 = post.end_date | date: '%b %Y' %}
+{% if m1 == m2 %}{{ post.date | date: '%-d' }}&ndash;{{ post.end_date | date: '%-d %b %Y' }}{% elsif y1 == y2 %}{{ post.date | date: '%-d %b' }} &ndash; {{ post.end_date | date: '%-d %b %Y' }}{% else %}{{ post.date | date: '%-d %b %Y' }} &ndash; {{ post.end_date | date: '%-d %b %Y' }}{% endif %}
+{% else %}{{ post.date | date: '%-d %b %Y' }}{% endif %}</span>
+<br><span style="color: var(--global-text-color-light);"><i class="fa-solid fa-location-dot fa-xs"></i> {{ post.location }}</span>
+</td>
+<td style="vertical-align: top; padding-top: 0.6rem; padding-bottom: 0.6rem;">
+<a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+{% if post.description %}<br><span style="color: var(--global-text-color-light); font-size: 0.9rem;">{{ post.description }}</span>{% endif %}
+</td>
+</tr>
+{% endif %}
+{% endfor %}
+</table>
+</div>
+{% if n == 0 %}<p>Nothing here yet.</p>{% endif %}

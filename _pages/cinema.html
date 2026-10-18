@@ -7,11 +7,11 @@ nav: false
 
 {% for movie in site.data.cinema %}
 <div class="row align-items-center mb-4">
-  <div class="col-8">
+  <div class="col-8" style="padding-right: 3rem;">
     <strong>{{ movie.title }}</strong> – {{ movie.director }} ({{ movie.year }})
   </div>
   <div class="col-4">
-    <img src="{{ '/assets/img/cinema/' | append: movie.image | relative_url }}" alt="{{ movie.title }}" class="img-fluid rounded z-depth-1">
+    <img src="{{ '/assets/img/cinema/' | append: movie.image | relative_url }}" alt="{{ movie.title }}" class="rounded z-depth-1" style="width: 50%;">
   </div>
 </div>
 {% endfor %}

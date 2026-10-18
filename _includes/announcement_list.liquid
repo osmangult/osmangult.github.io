@@ -1,0 +1,12 @@
+{% assign items = site.data.announcements[include.category] %}
+{% if items and items.size > 0 %}
+{% for a in items %}
+<details style="border-bottom: 1px solid var(--global-divider-color); padding: 0.9rem 0;">
+<summary style="cursor: pointer; font-size: 1.1rem;"><strong>({{ a.id }})</strong>: {{ a.title }}</summary>
+<p style="margin: 0.75rem 0 0.5rem;"><i class="fa-solid fa-file-pdf"></i> <a href="{{ a.pdf | relative_url }}" target="_blank" rel="noopener">open in new tab / download</a></p>
+<iframe src="{{ a.pdf | relative_url }}" loading="lazy" title="{{ a.title }}" style="width: 100%; height: 85vh; border: 1px solid var(--global-divider-color);"></iframe>
+</details>
+{% endfor %}
+{% else %}
+<p>There are no open positions in this category at the moment.</p>
+{% endif %}

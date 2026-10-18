@@ -1,0 +1,21 @@
+# Thesis announcements. Add entries under phd / msc / cestar; menu pages update automatically.
+phd: []
+
+msc:
+  - id: 1
+    title: "A Phase-Field Method for the Anisotropic Quasi-Brittle Fracture of 3D Printed Concrete: Constitutive Modeling and Calibration"
+    pdf: /assets/pdf/announcements/msc/MSc_Thesis_Announcement_1.pdf
+  - id: 2
+    title: "A Phase-Field Method for the Anisotropic Quasi-Brittle Fracture of 3D Printed Concrete: Element Implementation and Validation"
+    pdf: /assets/pdf/announcements/msc/MSc_Thesis_Announcement_2.pdf
+  - id: 3
+    title: "Modeling of Blood Clot Fracture in Human Arteries and Veins"
+    pdf: /assets/pdf/announcements/msc/MSc_Thesis_Announcement_3.pdf
+  - id: 4
+    title: "Physics-informed Surrogate Modeling of Isotropic and Anisotropic Hyperelasticity"
+    pdf: /assets/pdf/announcements/msc/MSc_Thesis_Announcement_4.pdf
+  - id: 5
+    title: "Physics-informed Surrogate Modeling of Fracture of Concrete"
+    pdf: /assets/pdf/announcements/msc/MSc_Thesis_Announcement_5.pdf
+
+cestar: []

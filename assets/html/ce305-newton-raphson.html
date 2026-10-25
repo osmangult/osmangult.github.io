@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Newton–Raphson method | CE 305</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&display=swap" rel="stylesheet">
+<style>:root{
+  --paper:#E8EFE1; --sheet:#F6F9F2; --grid1:#DCE7D3; --grid2:#BCD0AE;
+  --ink:#1D2A30; --muted:#55655C; --rule:#C2D3B5;
+  --curve:#1F4E99; --mark:#C0392B; --band:rgba(226,160,48,.24); --band-edge:#A86A12;
+  --ghost:rgba(29,42,48,.42); --diag:#5A6B22; --btn:#1D2A30; --btn-ink:#F6F9F2;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#131A16; --sheet:#1A231E; --grid1:#212D26; --grid2:#2E3F35;
+    --ink:#E2EADF; --muted:#9DAEA2; --rule:#2E3F35;
+    --curve:#8AB6FF; --mark:#FF7D6E; --band:rgba(240,185,80,.17); --band-edge:#E8B04A;
+    --ghost:rgba(226,234,223,.45); --diag:#C4D07E; --btn:#E2EADF; --btn-ink:#131A16;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#131A16; --sheet:#1A231E; --grid1:#212D26; --grid2:#2E3F35;
+  --ink:#E2EADF; --muted:#9DAEA2; --rule:#2E3F35;
+  --curve:#8AB6FF; --mark:#FF7D6E; --band:rgba(240,185,80,.17); --band-edge:#E8B04A;
+  --ghost:rgba(226,234,223,.45); --diag:#C4D07E; --btn:#E2EADF; --btn-ink:#131A16;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:16px/1.55 "Atkinson Hyperlegible","Segoe UI",system-ui,-apple-system,sans-serif}
+.wrap{max-width:1260px;margin:0 auto;padding:22px clamp(14px,3vw,34px) 48px}
+.course{font-size:.92rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px;align-items:baseline}
+.course nav{display:flex;gap:14px}
+.course nav a{white-space:nowrap;color:var(--ink);text-decoration:underline;text-decoration-color:var(--rule);text-underline-offset:3px}
+.course nav a[aria-current="page"]{text-decoration:none;color:var(--muted);pointer-events:none}
+h1{font-family:"Source Serif 4",Georgia,"Times New Roman",serif;font-weight:650;
+  font-size:clamp(1.9rem,3.6vw,2.7rem);line-height:1.08;margin:.25em 0 .3em;letter-spacing:-.01em}
+.lede{max-width:64ch;margin:0;font-size:1.08rem;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;margin-top:20px;align-items:start}
+@media (max-width:920px){.layout{grid-template-columns:1fr}}
+.stage,.panel,.tablewrap{background:var(--sheet);border:1px solid var(--rule);border-radius:6px}
+.stage{overflow:hidden}
+.plot{position:relative;height:clamp(330px,58vh,580px)}
+.plot canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+.plot canvas:active{cursor:grabbing}
+.tools{position:absolute;top:8px;right:8px;display:flex;gap:8px;align-items:center;
+  background:color-mix(in srgb,var(--sheet) 88%,transparent);padding:4px 6px 4px 10px;border-radius:5px;border:1px solid var(--rule);font-size:.86rem}
+.tools label{display:flex;gap:6px;align-items:center;margin:0;color:var(--ink);cursor:pointer}
+.tools input{width:auto;margin:0}
+.narr{border-top:1px solid var(--rule);padding:12px 18px;min-height:6.4em;font-size:1.02rem;max-width:none}
+.narr p{margin:0 0 .3em;max-width:78ch}
+.narr .warn{color:var(--mark)}
+.count{font-size:.85rem;color:var(--muted);margin-bottom:2px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 18px 14px;border-top:1px solid var(--rule)}
+button{font:inherit;font-size:.95rem;padding:7px 15px;border-radius:4px;border:1px solid var(--ink);
+  background:transparent;color:var(--ink);cursor:pointer}
+button.primary{background:var(--btn);color:var(--btn-ink)}
+button:disabled{opacity:.35;cursor:default}
+button.small{padding:3px 10px;font-size:.84rem}
+:focus-visible{outline:2px solid var(--mark);outline-offset:2px}
+.speed{display:flex;align-items:center;gap:8px;margin-left:auto;font-size:.9rem;color:var(--muted)}
+.speed input{width:110px;accent-color:var(--ink)}
+.main{display:flex;flex-direction:column;gap:16px;min-width:0}
+.side{display:flex;flex-direction:column;gap:16px}
+.panel{padding:14px 16px 16px}
+.panel h2{font-family:"Source Serif 4",Georgia,serif;font-weight:650;font-size:1.12rem;margin:0 0 6px}
+label{display:block;font-size:.9rem;color:var(--muted);margin:10px 0 3px}
+input,select{width:100%;font:inherit;font-size:.95rem;padding:6px 8px;border:1px solid var(--rule);
+  border-radius:4px;background:var(--paper);color:var(--ink)}
+input.code{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.88rem}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{font-size:.84rem;color:var(--muted);margin:6px 0 0;line-height:1.45}
+.err{color:var(--mark);font-size:.9rem;margin-top:6px;min-height:1.1em}
+.apply{margin-top:14px;width:100%}
+.eq{font-family:"Source Serif 4",Georgia,serif;font-size:1.18rem;margin:8px 0 10px;white-space:nowrap;overflow-x:auto;padding:2px 0}
+.eq i{font-style:italic}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .15em}
+.frac>span:first-child{border-bottom:1px solid currentColor;padding:0 .2em}
+.frac>span:last-child{padding:0 .2em}
+.rule-text{font-size:.94rem;margin:0 0 6px}
+.chip{margin-top:10px;padding:8px 10px;border-left:3px solid var(--band-edge);background:var(--paper);font-size:.9rem;line-height:1.45}
+.conv canvas{width:100%;height:210px;display:block}
+.legend{display:flex;gap:16px;font-size:.86rem;color:var(--muted);margin-top:6px}
+.legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.legend .la::before{background:var(--mark)}
+.legend .lt::before{border:2px solid var(--curve)}
+.tablewrap{margin-top:20px;max-height:380px;overflow:auto}
+table{border-collapse:collapse;width:100%;font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.86rem;font-variant-numeric:tabular-nums}
+th{position:sticky;top:0;background:var(--sheet);font-family:"Atkinson Hyperlegible","Segoe UI",sans-serif;
+  font-weight:700;text-align:right;padding:9px 14px;border-bottom:1px solid var(--grid2);white-space:nowrap}
+td{text-align:right;padding:5px 14px;border-bottom:1px solid var(--grid1);white-space:nowrap}
+th:first-child,td:first-child{text-align:center}
+tr.cur td{background:var(--band)}
+td.empty{text-align:left;color:var(--muted);font-family:"Atkinson Hyperlegible",sans-serif;padding:12px 14px}
+.foot{margin-top:14px;font-size:.84rem;color:var(--muted)}
+kbd{font-family:"IBM Plex Mono",monospace;font-size:.8rem;border:1px solid var(--rule);border-radius:3px;padding:0 4px}
+</style></head>
+<body><div class="wrap">
+<header>
+<div class="course"><span>CE 305 Numerical Methods for Engineers, Chapter 2</span><nav aria-label="Other methods"><a href="ce305-bisection.html" data-k="bis">Bisection</a><a href="ce305-newton-raphson.html" data-k="nr" aria-current="page">Newton–Raphson</a><a href="ce305-fixed-point.html" data-k="fp">Fixed-point iteration</a></nav></div>
+<h1>Newton–Raphson method</h1>
+<p class="lede">Start from one guess. Draw the tangent to the curve there and follow it down to the x-axis. Where it lands is the next guess.</p>
+</header>
+<div class="layout">
+<div class="main">
+<section class="stage" aria-label="Animation">
+<div class="plot"><canvas id="plot" role="img" aria-label="Graph of the method. The text below the graph describes each move."></canvas>
+<div class="tools"><label><input type="checkbox" id="follow" checked> Follow the iterations</label><button id="fit" class="small">Show all</button></div></div>
+<div class="narr" id="narr" aria-live="polite"></div>
+<div class="controls">
+<button id="reset">Reset</button><button id="back">Back</button><button id="play" class="primary">Play</button><button id="step">Step</button><button id="end">Run to end</button>
+<label class="speed">Speed <input type="range" id="speed" min="0.25" max="3" step="0.25" value="1"></label>
+</div>
+</section>
+<div class="panel conv"><h2>How fast does the error drop?</h2><canvas id="conv" aria-label="Percent errors against iteration number on a log scale"></canvas>
+<div class="legend"><span class="la">ε<sub>a</sub></span><span class="lt">ε<sub>t</sub></span><span>dashed: stopping value</span></div>
+<p class="hint">Once close to the root, each step roughly squares the error, so the points bend sharply downwards. That is quadratic convergence.</p></div>
+</div>
+<aside class="side">
+<div class="panel">
+<h2>Problem</h2>
+<label for="preset">Example</label><select id="preset"></select>
+<p class="hint" id="note"></p>
+<label for="f">f(x) =</label><input id="f" class="code" spellcheck="false" autocomplete="off" placeholder="e.g. x^3 - 2*x - 5">
+<label for="df">f′(x) =</label><input id="df" class="code" spellcheck="false" autocomplete="off" placeholder="leave empty to estimate it numerically">
+<label for="x0">Starting guess x₀</label><input id="x0" type="number" step="any">
+<div class="row2"><div><label for="tol">Stop when ε<sub>a</sub> &lt; (%)</label><input id="tol" type="number" step="any" min="0"></div><div><label for="maxit">Max iterations</label><input id="maxit" type="number" min="1" max="300"></div></div>
+<button id="apply" class="primary apply">Apply and restart</button>
+<div class="err" id="err" role="alert"></div>
+<p class="hint">Write x for the variable, * for multiplication, ^ for powers. Available: exp, ln, log10, sqrt, sin, cos, tan, arcsin, arccos, arctan, abs, pi.</p>
+</div>
+<div class="panel"><h2>The update rule</h2><div class="eq"><i>x</i><sub><i>i</i>+1</sub> = <i>x<sub>i</sub></i> − <span class="frac"><span><i>f</i>(<i>x<sub>i</sub></i>)</span><span><i>f</i> ′(<i>x<sub>i</sub></i>)</span></span></div>
+<p class="rule-text">Where the tangent at (<i>x<sub>i</sub></i>, <i>f</i>(<i>x<sub>i</sub></i>)) crosses <i>y</i> = 0. It is the first-order Taylor series set to zero.</p>
+<div class="eq">ε<sub>a</sub> = |<span class="frac"><span><i>x</i><sub><i>i</i>+1</sub> − <i>x<sub>i</sub></i></span><span><i>x</i><sub><i>i</i>+1</sub></span></span>| × 100%</div><div id="chip" class="chip"></div></div>
+</aside>
+</div>
+<div class="tablewrap"><table id="tbl"><thead><tr></tr></thead><tbody></tbody></table></div>
+<p class="foot">Keys: <kbd>→</kbd> step, <kbd>←</kbd> back, <kbd>Space</kbd> play or pause. Double-click the graph to show everything.</p>
+</div>
+<script>'use strict';
+const $=s=>document.querySelector(s);
+const SUBD='₀₁₂₃₄₅₆₇₈₉',SUPD='⁰¹²³⁴⁵⁶⁷⁸⁹';
+const sub=n=>String(n).split('').map(c=>c>='0'&&c<='9'?SUBD[+c]:(c==='+'?'₊':c)).join('');
+const sup=n=>String(n).split('').map(c=>c==='-'?'⁻':(c>='0'&&c<='9'?SUPD[+c]:c)).join('');
+const neg=s=>s.replace(/-/g,'−');
+function fmtN(v,sig=6){
+  if(v===null||v===undefined)return '—';
+  if(Number.isNaN(v))return 'undefined';
+  if(!isFinite(v))return v>0?'∞':'−∞';
+  if(v===0)return '0';
+  const a=Math.abs(v);
+  if(a>=1e6||a<1e-4){const [m,e]=v.toExponential(Math.max(2,sig-3)).split('e');return neg(m)+' × 10'+sup(+e);}
+  return neg(String(Number(v.toPrecision(sig))));
+}
+function fmtT(v){
+  if(v===null||v===undefined)return '—';
+  if(Number.isNaN(v))return 'undef.';
+  if(!isFinite(v))return v>0?'∞':'−∞';
+  if(v===0)return '0.000000';
+  const a=Math.abs(v);
+  if(a>=1e5||a<1e-4)return neg(v.toExponential(4).replace('e','e'));
+  return neg(v.toFixed(6));
+}
+function fmtP(v){
+  if(v===null||v===undefined||!isFinite(v))return '—';
+  if(v===0)return '0';
+  if(Math.abs(v)<1e-3||Math.abs(v)>=1e6)return neg(v.toExponential(2));
+  return neg(v.toPrecision(4));
+}
+function compile(expr,name){
+  if(!expr||!expr.trim())throw new Error(name+' is empty.');
+  let s=expr.trim().replace(/\^/g,'**').replace(/\barcsin\b/g,'asin').replace(/\barccos\b/g,'acos').replace(/\barctan\b/g,'atan');
+  if(/[;{}=`\[\]\\'"$]|\b(window|document|fetch|this|new|function|import|eval|constructor|prototype|globalThis|self|top)\b/.test(s))
+    throw new Error(name+': use a plain math expression in x.');
+  let fn;
+  try{
+    fn=new Function('x','"use strict";const {sin,cos,tan,asin,acos,atan,sinh,cosh,tanh,exp,sqrt,abs,cbrt,pow,sign,floor,ceil,min,max}=Math;const ln=Math.log,log=Math.log,log10=Math.log10,pi=Math.PI,e=Math.E;return ('+s+');');
+  }catch(err){throw new Error(name+': could not read "'+expr+'". Check brackets and use * for multiplication.');}
+  try{const t=fn(1.2345);if(typeof t!=='number')throw new Error('x');}
+  catch(err){
+    const m=/(\w+) is not defined/.exec(err.message||'');
+    throw new Error(name+': '+(m?'unknown name "'+m[1]+'".':'the expression must give a number.'));
+  }
+  return x=>{try{return fn(x);}catch(e){return NaN;}};
+}
+const numDeriv=f=>x=>{const h=1e-6*Math.max(1,Math.abs(x));return (f(x+h)-f(x-h))/(2*h);};
+function bisectRoot(f,lo,hi){
+  let flo=f(lo),fhi=f(hi);
+  if(!(flo*fhi<=0))return null;
+  if(flo===0)return lo; if(fhi===0)return hi;
+  for(let n=0;n<300;n++){const m=(lo+hi)/2,fm=f(m);if(fm===0||m===lo||m===hi)return m;if(flo*fm<0){hi=m;}else{lo=m;flo=fm;}}
+  return (lo+hi)/2;
+}
+function autoY(f,x0,x1,extra){
+  const v=[];for(let i=0;i<=300;i++){const y=f(x0+(x1-x0)*i/300);if(isFinite(y))v.push(y);}
+  v.sort((a,b)=>a-b);
+  let lo=v.length?v[Math.floor(v.length*.02)]:-1,hi=v.length?v[Math.max(0,Math.ceil(v.length*.98)-1)]:1;
+  for(const e of (extra||[]))if(isFinite(e)){lo=Math.min(lo,e);hi=Math.max(hi,e);}
+  lo=Math.min(lo,0);hi=Math.max(hi,0);
+  let pad=(hi-lo)*.12;if(!(pad>0))pad=1;
+  return [lo-pad,hi+pad];
+}
+function niceStep(range,n){
+  const raw=range/Math.max(1,n),p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p;
+  return (m<1.5?1:m<3.5?2:m<7.5?5:10)*p;
+}
+function tickFmt(v,step){
+  if(Math.abs(v)<step*1e-6)return '0';
+  if(Math.abs(v)>=1e6){const [m,e]=v.toExponential(2).split('e');return neg(m)+'e'+e.replace('+','');}
+  const d=Math.max(0,-Math.floor(Math.log10(step)+1e-9));
+  return neg(v.toFixed(Math.min(d,12)));
+}
+const ease=x=>x<.5?2*x*x:1-Math.pow(-2*x+2,2)/2;
+let C={};
+function readColors(){
+  const cs=getComputedStyle(document.documentElement),g=n=>cs.getPropertyValue(n).trim();
+  C={sheet:g('--sheet'),paper:g('--paper'),grid1:g('--grid1'),grid2:g('--grid2'),ink:g('--ink'),muted:g('--muted'),
+     curve:g('--curve'),mark:g('--mark'),band:g('--band'),edge:g('--band-edge'),ghost:g('--ghost'),diag:g('--diag')};
+}
+const FONT='"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif';
+
+class Plot{
+  constructor(cv,equal){this.cv=cv;this.ctx=cv.getContext('2d');this.equal=!!equal;this.view={x0:-1,x1:1,y0:-1,y1:1};this.target=null;this.w=1;this.h=1;}
+  resize(){const r=this.cv.getBoundingClientRect(),d=window.devicePixelRatio||1;this.w=Math.max(10,r.width);this.h=Math.max(10,r.height);
+    this.cv.width=Math.round(this.w*d);this.cv.height=Math.round(this.h*d);this.ctx.setTransform(d,0,0,d,0,0);
+    this.view=this.fix(this.view);if(this.target)this.target=this.fix(this.target);}
+  fix(v){
+    let o={...v};
+    const minS=1e-12*Math.max(1,Math.abs((o.x0+o.x1)/2));if(!(o.x1-o.x0>minS)){const c=(o.x0+o.x1)/2;o.x0=c-minS;o.x1=c+minS;}
+    const minY=1e-12*Math.max(1,Math.abs((o.y0+o.y1)/2));if(!(o.y1-o.y0>minY)){const c=(o.y0+o.y1)/2;o.y0=c-1;o.y1=c+1;}
+    if(!this.equal)return o;
+    const cx=(o.x0+o.x1)/2,cy=(o.y0+o.y1)/2,s=Math.max((o.x1-o.x0)/this.w,(o.y1-o.y0)/this.h);
+    return {x0:cx-s*this.w/2,x1:cx+s*this.w/2,y0:cy-s*this.h/2,y1:cy+s*this.h/2};
+  }
+  set(v,instant){v=this.fix(v);if(instant){this.view=v;this.target=null;}else this.target=v;}
+  tween(dt){
+    if(!this.target)return false;
+    const k=1-Math.exp(-dt/160),v=this.view,t=this.target;
+    const st=(a0,a1,b0,b1)=>{const c=(a0+a1)/2,tc=(b0+b1)/2,s=Math.log(a1-a0),ts=Math.log(b1-b0);
+      const hs=Math.exp(s+(ts-s)*k)/2,nc=c+(tc-c)*k;return [nc-hs,nc+hs];};
+    [v.x0,v.x1]=st(v.x0,v.x1,t.x0,t.x1);[v.y0,v.y1]=st(v.y0,v.y1,t.y0,t.y1);
+    const ok=(a0,a1,b0,b1)=>Math.abs(Math.log((a1-a0)/(b1-b0)))<2e-3&&Math.abs((a0+a1-b0-b1)/2)<2e-3*(b1-b0);
+    if(ok(v.x0,v.x1,t.x0,t.x1)&&ok(v.y0,v.y1,t.y0,t.y1)){this.view={...t};this.target=null;}
+    return true;
+  }
+  X(x){return (x-this.view.x0)/(this.view.x1-this.view.x0)*this.w;}
+  Y(y){return this.h-(y-this.view.y0)/(this.view.y1-this.view.y0)*this.h;}
+  ix(p){return this.view.x0+p/this.w*(this.view.x1-this.view.x0);}
+  iy(p){return this.view.y0+(this.h-p)/this.h*(this.view.y1-this.view.y0);}
+  cl(p){return Math.max(-2e4,Math.min(2e4,p));}
+  axisY(){const y=this.Y(0);return Math.max(12,Math.min(this.h-24,isFinite(y)?y:this.h-24));}
+  clear(){this.ctx.fillStyle=C.sheet;this.ctx.fillRect(0,0,this.w,this.h);}
+  grid(){
+    const c=this.ctx,v=this.view,xs=niceStep(v.x1-v.x0,this.w/95),ys=niceStep(v.y1-v.y0,this.h/70);
+    const lines=(sx,sy,col)=>{c.strokeStyle=col;c.lineWidth=1;c.beginPath();
+      let n=0;for(let x=Math.ceil(v.x0/sx)*sx;x<=v.x1&&n<400;x+=sx,n++){const p=Math.round(this.X(x))+.5;c.moveTo(p,0);c.lineTo(p,this.h);}
+      n=0;for(let y=Math.ceil(v.y0/sy)*sy;y<=v.y1&&n<400;y+=sy,n++){const p=Math.round(this.Y(y))+.5;c.moveTo(0,p);c.lineTo(this.w,p);}c.stroke();};
+    if(this.w/((v.x1-v.x0)/(xs/5))>=7)lines(xs/5,ys/5,C.grid1);
+    lines(xs,ys,C.grid2);
+    const y0=this.Y(0),x0=this.X(0);
+    c.strokeStyle=C.ink;c.lineWidth=1.3;c.beginPath();
+    if(y0>=0&&y0<=this.h){c.moveTo(0,y0);c.lineTo(this.w,y0);}
+    if(x0>=0&&x0<=this.w){c.moveTo(x0,0);c.lineTo(x0,this.h);}
+    c.stroke();
+    c.font='12px '+FONT;c.fillStyle=C.muted;
+    const ly=(y0>=0&&y0<=this.h)?Math.min(this.h-6,Math.max(14,y0+15)):this.h-6;
+    c.textAlign='center';c.textBaseline='alphabetic';
+    for(let x=Math.ceil(v.x0/xs)*xs,n=0;x<=v.x1&&n<200;x+=xs,n++){const p=this.X(x);if(p<18||p>this.w-18)continue;if(Math.abs(x)<xs*1e-6&&x0>=0&&x0<=this.w)continue;this.halo(tickFmt(x,xs),p,ly);}
+    const lx=(x0>=0&&x0<=this.w)?Math.min(this.w-60,Math.max(4,x0+5)):4;
+    c.textAlign='left';c.textBaseline='middle';
+    for(let y=Math.ceil(v.y0/ys)*ys,n=0;y<=v.y1&&n<200;y+=ys,n++){const p=this.Y(y);if(p<12||p>this.h-30)continue;if(Math.abs(y)<ys*1e-6)continue;this.halo(tickFmt(y,ys),lx,p);}
+  }
+  halo(s,x,y){const c=this.ctx;c.save();c.lineWidth=4;c.strokeStyle=C.sheet;c.lineJoin='round';c.strokeText(s,x,y);c.restore();c.fillText(s,x,y);}
+  text(s,x,y,o={}){const c=this.ctx;c.save();c.font=(o.weight||'')+' '+(o.size||13)+'px '+FONT;c.fillStyle=o.color||C.ink;
+    c.textAlign=o.align||'center';c.textBaseline=o.base||'middle';c.globalAlpha=o.alpha??1;this.halo(s,x,y);c.restore();}
+  curve(f,col,lw,dash){
+    const c=this.ctx;c.save();c.strokeStyle=col;c.lineWidth=lw;c.setLineDash(dash||[]);c.lineJoin='round';c.beginPath();
+    let pen=false,pp=null,pf=null;const n=Math.ceil(this.w/1.5);
+    for(let i=0;i<=n;i++){const px=i*this.w/n,x=this.ix(px),y=f(x),py=this.Y(y);
+      if(!isFinite(py)){pen=false;pp=null;continue;}
+      if(pen&&pp!==null&&Math.abs(py-pp)>this.h*1.5&&pf*y<0)pen=false;
+      const q=this.cl(py);if(!pen){c.moveTo(px,q);pen=true;}else c.lineTo(px,q);pp=py;pf=y;}
+    c.stroke();c.restore();
+  }
+  seg(x1,y1,x2,y2,col,lw,dash,alpha){const c=this.ctx;c.save();c.globalAlpha=alpha??1;c.strokeStyle=col;c.lineWidth=lw||1.5;c.setLineDash(dash||[]);
+    c.beginPath();c.moveTo(this.cl(this.X(x1)),this.cl(this.Y(y1)));c.lineTo(this.cl(this.X(x2)),this.cl(this.Y(y2)));c.stroke();c.restore();}
+  dot(x,y,r,fill,stroke,alpha){if(r<=0)return;const c=this.ctx,px=this.X(x),py=this.Y(y);if(!isFinite(px)||!isFinite(py))return;
+    c.save();c.globalAlpha=alpha??1;c.beginPath();c.arc(this.cl(px),this.cl(py),r,0,Math.PI*2);
+    if(fill){c.fillStyle=fill;c.fill();}if(stroke){c.strokeStyle=stroke;c.lineWidth=2;c.stroke();}c.restore();}
+  band(x0,x1,col,alpha){const c=this.ctx,a=this.cl(this.X(Math.min(x0,x1))),b=this.cl(this.X(Math.max(x0,x1)));c.save();c.globalAlpha=alpha??1;c.fillStyle=col;c.fillRect(a,0,b-a,this.h);c.restore();}
+  mark(x,label,col,below,alpha){
+    const px=this.X(x);if(!isFinite(px)||px<-20||px>this.w+20)return;const ay=this.axisY(),c=this.ctx;
+    c.save();c.globalAlpha=alpha??1;c.strokeStyle=col;c.lineWidth=2;c.beginPath();c.moveTo(px,ay-5);c.lineTo(px,ay+5);c.stroke();c.restore();
+    if(label)this.text(label,px,below?ay+31:ay-16,{color:col,size:14,weight:'700',alpha});
+  }
+}
+
+/* ---------- app ---------- */
+function App(M){
+  readColors();
+  const plot=new Plot($('#plot'),M.equal),cv2=$('#conv');
+  let P=null,R=null,k=0,t=0,anim=false,playing=false,t0=0,timer=null,dirty=true,last=performance.now(),drag=null;
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const speed=()=>+$('#speed').value;
+  const dur=()=>reduce?120:950/speed(),pause=()=>reduce?250:420/speed();
+  const prog=j=>j<k?1:(j===k&&anim?ease(t):0);
+  const N=()=>R?R.beats.length:0;
+  const sel=$('#preset');
+  M.presets.forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent=p.name;sel.appendChild(o);});
+  const oc=document.createElement('option');oc.value='custom';oc.textContent='Your own function';sel.appendChild(oc);
+  let base=0;
+  function load(i){const p=M.presets[i];base=i;for(const f of M.fields)$('#'+f.id).value=(p[f.id]??'');
+    $('#tol').value=p.tol??0.01;$('#maxit').value=p.maxit??30;$('#note').textContent=p.note||'';}
+  sel.addEventListener('change',()=>{if(sel.value==='custom'){for(const f of M.fields)if(f.type==='expr')$('#'+f.id).value='';$('#note').textContent='Type your own expression and starting values, then press Apply and restart.';$('#'+M.fields[0].id).focus();return;}load(+sel.value);apply();});
+  for(const f of M.fields)if(f.type==='expr')$('#'+f.id).addEventListener('input',()=>{if(sel.value!=='custom'){sel.value='custom';$('#note').textContent='Edited. Press Apply and restart to run it.';}});
+  function read(){
+    const Q={};
+    for(const f of M.fields){const raw=$('#'+f.id).value;
+      if(f.type==='expr'){Q[f.id+'Src']=raw.trim();Q[f.id]=(f.optional&&!raw.trim())?null:compile(raw,f.name);}
+      else{const v=parseFloat(raw);if(!isFinite(v))throw new Error(f.name+' must be a number.');Q[f.id]=v;}}
+    Q.tol=parseFloat($('#tol').value);if(!(Q.tol>0))throw new Error('εs must be a positive number, e.g. 0.01.');
+    Q.maxit=Math.round(+$('#maxit').value);if(!(Q.maxit>=1&&Q.maxit<=300))throw new Error('Max iterations must be between 1 and 300.');
+    Q.preset=sel.value==='custom'?null:M.presets[base];
+    if(M.check){const m=M.check(Q);if(m)throw new Error(m);}
+    return Q;
+  }
+  function apply(){
+    $('#err').textContent='';
+    let Q;try{Q=read();}catch(e){$('#err').textContent=e.message;return;}
+    stop();P=Q;R=M.compute(P);k=0;anim=false;plot.set(M.box(R,P,0),true);
+    narrate(-1);refresh();
+  }
+  $('#apply').addEventListener('click',apply);
+  for(const id of [...M.fields.map(f=>f.id),'tol','maxit'])$('#'+id).addEventListener('keydown',e=>{if(e.key==='Enter')apply();});
+  function narrate(j){
+    $('#narr').innerHTML='<div class="count">'+(j<0?'Ready':'Move '+(j+1)+' of '+N())+'</div>'+(j<0?M.intro(R,P):M.say(R,P,R.beats[j]));
+  }
+  function table(){
+    const tb=$('#tbl tbody'),rows=R.recs.filter(r=>r.rowBeat<k);
+    if(!rows.length){tb.innerHTML='<tr><td class="empty" colspan="'+M.cols.length+'">Rows appear here as the iterations run.</td></tr>';return;}
+    tb.innerHTML=rows.map((r,i)=>'<tr'+(i===rows.length-1?' class="cur"':'')+'>'+M.row(r,R,P).map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('');
+    const w=$('.tablewrap'),cur=tb.lastElementChild;if(cur&&w.scrollHeight>w.clientHeight)w.scrollTop=cur.offsetTop-w.clientHeight+cur.offsetHeight+4;
+  }
+  function conv(){
+    const r=cv2.getBoundingClientRect(),d=window.devicePixelRatio||1;cv2.width=Math.round(r.width*d);cv2.height=Math.round(r.height*d);
+    const c=cv2.getContext('2d');c.setTransform(d,0,0,d,0,0);const W=r.width,H=r.height;c.fillStyle=C.sheet;c.fillRect(0,0,W,H);
+    if(!R)return;
+    const rows=R.recs.filter(q=>q.rowBeat<k),ea=[],et=[];
+    for(const q of rows){const n=M.iterNo(q);if(q.ea>0&&isFinite(q.ea))ea.push([n,q.ea]);if(q.et>0&&isFinite(q.et))et.push([n,q.et]);}
+    const all=[...ea,...et].map(p=>p[1]);
+    let lo=Math.floor(Math.log10(Math.min(P.tol,1e-2,...all))),hi=Math.ceil(Math.log10(Math.max(100,...all)));
+    lo=Math.max(lo,-16);hi=Math.min(hi,30);if(hi-lo<4)lo=hi-4;
+    const nmax=Math.max(5,...ea.map(p=>p[0]),...et.map(p=>p[0]));
+    const L=44,Rm=10,T=10,B=26,X=i=>L+i/nmax*(W-L-Rm),Y=v=>T+(hi-Math.log10(v))/(hi-lo)*(H-T-B);
+    c.font='11px '+FONT;c.fillStyle=C.muted;c.strokeStyle=C.grid2;c.lineWidth=1;
+    const st=Math.max(1,Math.ceil((hi-lo)/5));
+    c.textAlign='right';c.textBaseline='middle';
+    for(let e=hi;e>=lo;e-=st){const y=Math.round(Y(Math.pow(10,e)))+.5;c.beginPath();c.moveTo(L,y);c.lineTo(W-Rm,y);c.stroke();c.fillText('10'+sup(e),L-6,y);}
+    const xs=Math.max(1,niceStep(nmax,6));c.textAlign='center';c.textBaseline='alphabetic';
+    for(let i=0;i<=nmax;i+=xs){const x=X(i);c.fillText(String(i),x,H-10);}
+    c.fillText('iteration',L+(W-L-Rm)/2,H-0.5);
+    c.save();c.strokeStyle=C.muted;c.setLineDash([5,4]);c.beginPath();c.moveTo(L,Y(P.tol));c.lineTo(W-Rm,Y(P.tol));c.stroke();c.restore();
+    const ser=(pts,col,fill)=>{if(!pts.length)return;c.save();c.strokeStyle=col;c.lineWidth=1.6;c.beginPath();
+      pts.forEach((p,i)=>{const x=X(p[0]),y=Math.max(T-4,Math.min(H-B+4,Y(p[1])));i?c.lineTo(x,y):c.moveTo(x,y);});c.stroke();
+      for(const p of pts){const x=X(p[0]),y=Math.max(T-4,Math.min(H-B+4,Y(p[1])));c.beginPath();c.arc(x,y,3.4,0,7);
+        if(fill){c.fillStyle=col;c.fill();}else{c.fillStyle=C.sheet;c.fill();c.lineWidth=1.8;c.stroke();}}c.restore();};
+    ser(et,C.curve,false);ser(ea,C.mark,true);
+  }
+  function buttons(){
+    const n=N();$('#back').disabled=k===0&&!anim;$('#step').disabled=k>=n;$('#end').disabled=k>=n&&!anim;$('#reset').disabled=k===0&&!anim;
+    $('#play').textContent=playing?'Pause':(k>=n?'Replay':'Play');
+  }
+  function refresh(){table();conv();$('#chip').innerHTML=M.chip(R,P,k);buttons();dirty=true;}
+  function stop(){playing=false;clearTimeout(timer);}
+  function begin(){
+    if(k>=N()){stop();buttons();return;}
+    anim=true;t=0;t0=performance.now();
+    if($('#follow').checked)plot.set(M.box(R,P,k+1));
+    narrate(k);buttons();dirty=true;
+  }
+  function finish(){
+    anim=false;k++;refresh();
+    if(playing){if(k>=N()){stop();buttons();}else timer=setTimeout(begin,pause());}
+  }
+  $('#step').addEventListener('click',()=>{if(anim){t0=-1e9;return;}stop();begin();});
+  $('#play').addEventListener('click',()=>{
+    if(playing){stop();buttons();return;}
+    if(k>=N()){k=0;plot.set(M.box(R,P,0));narrate(-1);refresh();}
+    playing=true;buttons();if(!anim)begin();
+  });
+  $('#back').addEventListener('click',()=>{stop();if(anim)anim=false;else if(k>0)k--;narrate(k-1);if($('#follow').checked)plot.set(M.box(R,P,k));refresh();});
+  $('#reset').addEventListener('click',()=>{stop();anim=false;k=0;plot.set(M.box(R,P,0));narrate(-1);refresh();});
+  $('#end').addEventListener('click',()=>{stop();anim=false;k=N();plot.set(M.fit(R,P,k));narrate(k-1);refresh();});
+  $('#fit').addEventListener('click',()=>plot.set(M.fit(R,P,k)));
+  $('#follow').addEventListener('change',e=>{if(e.target.checked)plot.set(M.box(R,P,k));});
+  document.addEventListener('keydown',e=>{
+    if(/INPUT|SELECT|TEXTAREA|BUTTON/.test(e.target.tagName))return;
+    if(e.key===' '){e.preventDefault();$('#play').click();}
+    else if(e.key==='ArrowRight'){e.preventDefault();$('#step').click();}
+    else if(e.key==='ArrowLeft'){e.preventDefault();$('#back').click();}
+  });
+  const cv=$('#plot');
+  const manual=()=>{$('#follow').checked=false;plot.target=null;dirty=true;};
+  cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,v:{...plot.view}};cv.setPointerCapture(e.pointerId);});
+  cv.addEventListener('pointermove',e=>{if(!drag)return;const v=drag.v,dx=(e.clientX-drag.x)/plot.w*(v.x1-v.x0),dy=(e.clientY-drag.y)/plot.h*(v.y1-v.y0);
+    if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>2)manual();plot.view={x0:v.x0-dx,x1:v.x1-dx,y0:v.y0+dy,y1:v.y1+dy};dirty=true;});
+  const up=()=>{drag=null;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  cv.addEventListener('wheel',e=>{e.preventDefault();manual();const r=cv.getBoundingClientRect(),f=Math.exp(e.deltaY*.0015),
+    mx=plot.ix(e.clientX-r.left),my=plot.iy(e.clientY-r.top),v=plot.view;
+    plot.view={x0:mx+(v.x0-mx)*f,x1:mx+(v.x1-mx)*f,y0:my+(v.y0-my)*f,y1:my+(v.y1-my)*f};dirty=true;},{passive:false});
+  cv.addEventListener('dblclick',()=>plot.set(M.fit(R,P,k)));
+  new ResizeObserver(()=>{plot.resize();conv();dirty=true;}).observe($('.plot'));
+  new ResizeObserver(()=>conv()).observe(cv2);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{readColors();conv();dirty=true;});
+  function frame(now){
+    const dt=Math.min(100,now-last);last=now;let need=dirty;
+    if(plot.tween(dt))need=true;
+    if(anim){t=Math.min(1,(now-t0)/dur());need=true;}
+    if(need&&R){plot.clear();plot.grid();M.draw(plot,R,P,prog);dirty=false;}
+    if(anim&&t>=1)finish();
+    requestAnimationFrame(frame);
+  }
+  plot.resize();load(0);apply();requestAnimationFrame(frame);
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{dirty=true;conv();});
+}
+
+const M={
+  equal:false,
+  fields:[{id:'f',name:'f(x)',type:'expr'},{id:'df',name:'f′(x)',type:'expr',optional:true},{id:'x0',name:'x₀',type:'num'}],
+  presets:[
+    {name:'x sin x − 1',f:'x*sin(x)-1',df:'sin(x)+x*cos(x)',x0:1,tol:0.01,maxit:20,view:[-0.4,2.6],roots:[[1,1.5]],
+     note:'The common example of the chapter, with f′(x) = sin x + x cos x. Compare εt from one row to the next: the number of correct digits roughly doubles.'}
+  ],
+  compute(P){
+    const f=P.f,df=P.df||numDeriv(f),R={recs:[],beats:[{type:'start'}],x0:P.x0,status:'',xr:null,numeric:!P.df};
+    let x=P.x0,cyc=0;
+    for(let i=0;i<P.maxit;i++){
+      const fx=f(x),d=df(x);
+      if(!isFinite(fx)||!isFinite(d)){R.status='undef';R.bad={i,x,fx,d};break;}
+      if(fx===0){R.status='exact';R.bad={i,x};break;}
+      if(Math.abs(d)<1e-14*Math.max(1,Math.abs(fx))||!isFinite(fx/d)){const r={i,x,fx,d,xn:null,ea:null};R.recs.push(r);R.beats.push({type:'eval',r},{type:'flat',r});r.rowBeat=R.beats.length-1;R.status='zeroslope';break;}
+      const xn=x-fx/d,ea=xn!==0?Math.abs((xn-x)/xn)*100:null,r={i,x,fx,d,xn,ea};R.recs.push(r);
+      R.beats.push({type:'eval',r},{type:'tan',r},{type:'new',r});r.rowBeat=R.beats.length-1;
+      if(!isFinite(xn)||Math.abs(xn)>1e8){R.status='diverged';break;}
+      if(ea!==null&&ea<P.tol){R.status='converged';break;}
+      if(i>=1&&Math.abs(xn-R.recs[i-1].x)<=1e-9*Math.max(1,Math.abs(xn))){if(++cyc>=4){R.status='cycle';break;}}else cyc=0;
+      x=xn;if(i===P.maxit-1)R.status='maxit';
+    }
+    R.beats.push({type:'end'});R.last=R.recs[R.recs.length-1];
+    if(R.status==='converged'||R.status==='exact'){let z=R.status==='exact'?R.bad.x:R.last.xn;
+      for(let n=0;n<60;n++){const fz=f(z),d=df(z);if(fz===0||!isFinite(d)||d===0)break;const zn=z-fz/d;if(!isFinite(zn)||zn===z)break;z=zn;}R.xr=z;}
+    else if(P.preset&&P.preset.roots){let best=null;for(const [lo,hi] of P.preset.roots){const z=bisectRoot(f,lo,hi);if(z!==null&&(best===null||Math.abs(z-P.x0)<Math.abs(best-P.x0)))best=z;}R.xr=best;}
+    if(R.xr!==null){const xr=R.xr,h=1e-4*Math.max(1,Math.abs(xr)),d1=df(xr),d2=(df(xr+h)-df(xr-h))/(2*h);
+      R.Cth=d1!==0?-d2/(2*d1):null;
+      for(const r of R.recs){if(r.xn===null)continue;r.et=xr!==0?Math.abs((xr-r.xn)/xr)*100:null;
+        const E0=xr-r.x,E1=xr-r.xn;r.q=(Math.abs(E0)>1e-300&&Math.abs(E1)>2e-15*Math.max(1,Math.abs(xr))&&Math.abs(E0)<1)?E1/(E0*E0):null;}}
+    return R;
+  },
+  cur(R,kk){let r=null;for(let j=0;j<Math.min(kk,R.beats.length);j++){const bt=R.beats[j];if(bt.type==='eval')r=bt.r;}return r;},
+  box(R,P,kk){
+    if(kk<=1){let x0,x1;
+      if(P.preset&&P.preset.view&&P.x0>=P.preset.view[0]&&P.x0<=P.preset.view[1])[x0,x1]=P.preset.view;
+      else{const h=Math.max(2,Math.abs(P.x0)*.5);x0=P.x0-h;x1=P.x0+h;}
+      const [y0,y1]=autoY(P.f,x0,x1,[P.f(P.x0)]);return {x0,x1,y0,y1};}
+    const r=this.cur(R,kk);if(!r)return this.box(R,P,0);
+    const tanDone=R.beats.slice(0,kk).some(b=>b.r===r&&b.type==='tan');
+    const prev=R.recs[r.i-1],xs=[r.x];if(tanDone&&r.xn!==null)xs.push(r.xn);else if(prev)xs.push(prev.x);
+    const lo=Math.min(...xs),hi=Math.max(...xs),sp=Math.max(hi-lo,1e-3*Math.max(1,Math.abs(r.x)));
+    const x0=lo-.3*sp,x1=hi+.3*sp,[y0,y1]=autoY(P.f,x0,x1,[r.fx]);return {x0,x1,y0,y1};
+  },
+  fit(R,P,kk){
+    const xs=[P.x0];for(let j=0;j<Math.min(kk,R.beats.length);j++){const b=R.beats[j];if(b.r){xs.push(b.r.x);if(b.type==='new')xs.push(b.r.xn);}}
+    const lo=Math.min(...xs),hi=Math.max(...xs),sp=Math.max(hi-lo,1),x0=lo-.15*sp,x1=hi+.15*sp,[y0,y1]=autoY(P.f,x0,x1,[]);
+    return {x0,x1,y0,y1};
+  },
+  draw(pl,R,P,prog){
+    pl.curve(P.f,C.curve,2.4);
+    const p0=prog(0);if(p0===0)return;
+    const pts=[{x:R.x0,i:0,p:p0}];let cur=null;const past=[];
+    for(const r of R.recs){const bi=R.beats.findIndex(b=>b.r===r);const pe=prog(bi);if(pe===0)break;if(cur)past.push(cur);cur={r,pe,pt:prog(bi+1),pn:r.xn!==null?prog(bi+2):0};}
+    for(const q of past){const r=q.r;pl.seg(r.x,0,r.x,r.fx,C.ghost,1.2,[4,4]);pl.seg(r.x,r.fx,r.xn,0,C.ghost,1.4);pl.dot(r.x,r.fx,3.5,C.ghost);pts.push({x:r.xn,i:r.i+1,p:1});}
+    if(cur){const r=cur.r;
+      pl.seg(r.x,0,r.x,r.fx*cur.pe,C.mark,2,[6,4]);if(cur.pe>.6)pl.dot(r.x,r.fx,6.5*(cur.pe-.6)/.4,C.mark);
+      if(r.xn!==null&&cur.pt>0){const ex=(r.xn-r.x)*.35,sl=r.d;
+        if(cur.pt>=1){pl.seg(r.x-ex,r.fx-sl*ex,r.x,r.fx,C.mark,1.2,[],.45);pl.seg(r.xn,0,r.xn+ex,sl*ex,C.mark,1.2,[],.45);}
+        pl.seg(r.x,r.fx,r.x+(r.xn-r.x)*cur.pt,r.fx*(1-cur.pt),C.mark,2.6);
+        if(cur.pt>=1)pl.text('slope = f′(x'+sub(r.i)+')',pl.X((r.x+r.xn)/2)+10,pl.Y(r.fx/2)-14,{color:C.mark,size:13,align:'left'});}
+      if(R.status==='zeroslope'&&r.xn===null&&cur.pt>0){pl.seg(pl.ix(0),r.fx,pl.ix(pl.w),r.fx,C.mark,2,[8,5],cur.pt);
+        pl.text('f′ = 0: tangent never reaches y = 0',pl.X(r.x),pl.Y(r.fx)-18,{color:C.mark,size:14,weight:'700',alpha:cur.pt});}
+      if(cur.pn>0){pl.dot(r.xn,0,7*cur.pn,C.mark);pts.push({x:r.xn,i:r.i+1,p:cur.pn,hot:true});}}
+    const show=pts.slice(-3);
+    for(const q of pts){const lab=show.includes(q);pl.mark(q.x,lab?'x'+sub(q.i):'',q.hot?C.mark:(lab?C.ink:C.muted),true,q.p);}
+    const pe=prog(R.beats.length-1);
+    if(pe>0&&R.status==='converged'){const x=R.last.xn;pl.dot(x,0,12,null,C.mark,pe);pl.text('root ≈ '+fmtN(x,8),pl.X(x),pl.axisY()-30,{color:C.mark,size:14,weight:'700',alpha:pe});}
+  },
+  intro(){return '<p>Blue: the curve f(x). Press <b>Step</b> (or <kbd>→</kbd>) to move one stage at a time, or <b>Play</b> to watch. Drag to pan, scroll to zoom.</p>';},
+  say(R,P,bt){
+    const r=bt.r,F=v=>fmtN(v,6);
+    switch(bt.type){
+      case 'start':return '<p>Start from one guess, x'+sub(0)+' = '+F(R.x0)+'. Unlike bisection, nothing has to be bracketed.</p>';
+      case 'eval':return '<p><b>Iteration '+(r.i+1)+'.</b> Go up to the curve at x'+sub(r.i)+' = '+F(r.x)+'. Height f(x'+sub(r.i)+') = '+F(r.fx)+', slope f′(x'+sub(r.i)+') = '+F(r.d)+'.</p>';
+      case 'tan':return '<p>Replace the curve by its tangent line and slide down it to y = 0:</p><p>x'+sub(r.i+1)+' = x'+sub(r.i)+' − f(x'+sub(r.i)+')/f′(x'+sub(r.i)+') = '+F(r.x)+' − ('+F(r.fx)+')/('+F(r.d)+') = '+F(r.xn)+'</p>';
+      case 'new':return '<p>New estimate x'+sub(r.i+1)+' = '+F(r.xn)+'. εa = |(x'+sub(r.i+1)+' − x'+sub(r.i)+')/x'+sub(r.i+1)+'| × 100 = '+fmtP(r.ea)+'%.'+(r.et!=null?' True error εt = '+fmtP(r.et)+'%.':'')+'</p>';
+      case 'flat':return '<p class="warn">f′(x'+sub(r.i)+') = 0. The tangent is horizontal, so it never crosses y = 0, and the formula divides by zero.</p>';
+      case 'end':{
+        const L=R.last,n=R.recs.length;
+        if(R.status==='converged'){let s='<p><b>Stop.</b> εa = '+fmtP(L.ea)+'% is below εs = '+P.tol+'%. Root ≈ '+fmtN(L.xn,9)+' after '+n+' iterations.</p>';
+          if(R.Cth!=null&&isFinite(R.Cth))s+='<p>Close to the root the true errors follow E'+sub('t,i+1')+' ≈ C·E'+sub('t,i')+'² with C = −f″(x'+sub('r')+')/(2f′(x'+sub('r')+')) ≈ '+fmtN(R.Cth,4)+'. Check the last column of the table.</p>';
+          return s;}
+        if(R.status==='exact')return '<p><b>Stop.</b> f is exactly zero at x = '+F(R.bad.x)+'.</p>';
+        if(R.status==='zeroslope')return '<p class="warn"><b>Stop.</b> Newton–Raphson broke down at x'+sub(L.i)+' = '+F(L.x)+' because f′ = 0 there. Pick a different starting guess.</p>';
+        if(R.status==='diverged')return '<p class="warn"><b>Stop.</b> The estimates are running away (|x| above 10⁸). Newton–Raphson diverged from this starting point. Nothing in the method pulls it back.</p>';
+        if(R.status==='cycle')return '<p class="warn"><b>Stop.</b> x'+sub(L.i+1)+' ≈ x'+sub(L.i-1)+': the estimates repeat. Newton–Raphson is trapped in a cycle and will never settle. The only cure is a better x'+sub(0)+'.</p>';
+        if(R.status==='undef')return '<p class="warn"><b>Stop.</b> f or f′ is not defined at x = '+F(R.bad.x)+'.</p>';
+        return '<p><b>Stop.</b> Iteration limit ('+P.maxit+') reached before εa fell below εs. Last estimate '+F(L?L.xn:R.x0)+'.</p>';}
+    }
+    return '';
+  },
+  chip(R,P){
+    let s=R.numeric?'f′(x) is estimated numerically (central difference) because the f′ field is empty.':'f′(x) comes from the formula you gave.';
+    if(R.xr!=null)s+='<br>Root used for εt: x'+sub('r')+' = '+fmtN(R.xr,9)+'.';
+    if(R.Cth!=null&&isFinite(R.Cth))s+='<br>Predicted error constant −f″(x'+sub('r')+')/(2f′(x'+sub('r')+')) ≈ '+fmtN(R.Cth,4)+'.';
+    return s;
+  },
+  cols:['i','x<sub>i</sub>','f(x<sub>i</sub>)','f′(x<sub>i</sub>)','x<sub>i+1</sub>','ε<sub>a</sub> (%)','ε<sub>t</sub> (%)','E<sub>t,i+1</sub> / E<sub>t,i</sub><sup>2</sup>'],
+  row(r){return [r.i,fmtT(r.x),fmtT(r.fx),fmtT(r.d),fmtT(r.xn),fmtP(r.ea),fmtP(r.et),r.q!=null?neg(r.q.toPrecision(4)):'—'];},
+  iterNo(r){return r.i+1;}
+};
+App(M);
+
+document.querySelector('#tbl thead tr').innerHTML=M.cols.map(c=>'<th>'+c+'</th>').join('');
+</script></body></html>

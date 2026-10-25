@@ -23,11 +23,11 @@ groups:
     members: []
 ---
 
-<div class="row mb-4">
-<div class="col-12 col-sm-6 col-md-4">
+<div class="clearfix mb-4">
+<div class="profile float-right">
 <img src="{{ page.pi.image | prepend: '/assets/img/' | relative_url }}" alt="{{ page.pi.name }}" class="img-fluid z-depth-1 rounded">
-<p class="mt-2 mb-0"><strong>{{ page.pi.name }}</strong><br>{{ page.pi.role }}</p>
 </div>
+<p class="mb-0" style="font-size: 1.25rem;"><strong>{{ page.pi.name }}</strong><br>{{ page.pi.role }}</p>
 </div>
 
 {% for group in page.groups %}

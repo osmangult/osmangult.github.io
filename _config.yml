@@ -123,7 +123,7 @@ bing_site_verification: # out your bing-site-verification ID (Bing Webmaster)
 # -----------------------------------------------------------------------------
 
 blog_name: al-folio # blog_name will be displayed in your blog page
-blog_description: Computational Solid Mechanics Lab at METU Civil Engineering PI: Osman Gültekin
+blog_description: "Computational Solid Mechanics Lab at METU Civil Engineering PI: Osman Gültekin"
 permalink: /blog/:year/:title/
 lsi: false # produce an index for related posts
 future: true # publish posts with future dates (upcoming conferences/events)

@@ -2,7 +2,7 @@
 layout: page
 permalink: /people/
 title: people
-description: members of the lab
+description: members of the CSMG
 nav: true
 nav_order: 7
 
